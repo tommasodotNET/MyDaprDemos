@@ -85,26 +85,33 @@ This allows code to subscribe to events via attributes.  With those three change
 
 By default this code returns random weather data. But a real system might return data stored from events posted to it about the current weather. So we are going to add code that get executed for each event and stores the data.
 
-Open the _WeatherForecastController.cs_ file and add.
+First, let's update the data model to include a location. Open the _WeatherForecast.cs_ file and add the follow property to the class.
+
+```csharp
+public string? Location { get; set; }
+```
+
+Next, open the _WeatherForecastController.cs_ file and add.
 
 ```csharp
 [HttpPost]
 [Dapr.Topic("pubsub", "new")]
 public async Task<ActionResult<WeatherForecast>> PostWeatherForecast(WeatherForecast model, [FromServices] Dapr.Client.DaprClient daprClient)
 {
-    await daprClient.SaveStateAsync<WeatherForecast>("statestore", "weather", model);
+    await daprClient.SaveStateAsync<WeatherForecast>("statestore", model.Location, model);
 
     return model;
 }
 ```
 
-Continuing with the incremental adoption we will not change the return type of the get method when adding new functionality. 
+Because we are only storing a single value for each location change the return type to a single WeatherForecast object. We also add the location to the route using the Route attribute. 
 
 ```csharp
 [HttpGet(Name = "GetWeatherForecast")]
-public IEnumerable<WeatherForecast> Get([FromServices] Dapr.Client.DaprClient daprClient)
+[Route("{location}")]
+public async Task<WeatherForecast> Get(string location, [FromServices] Dapr.Client.DaprClient daprClient)
 {
-    return new List<WeatherForecast>{ daprClient.GetStateAsync<WeatherForecast>("statestore", "weather").Result };
+    return await daprClient.GetStateAsync<WeatherForecast>("statestore", location);
 }
 ```
 
@@ -158,18 +165,16 @@ HTTP/1.1 200 OK
 Server: Kestrel
 Date: Sun, 28 Aug 2022 23:40:10 GMT
 Content-Type: application/json; charset=utf-8
-Content-Length: 85
-Traceparent: 00-7def0499fe51d72e18f10cde11a306d3-cfe09fcf61f01ed5-01
+Traceparent: 00-bd9f10186ed4a7c9bca77dd45e3336cb-28db947652c34ec4-01
 Connection: close
 
-[
-  {
-    "date": "0001-01-01T00:00:00",
-    "temperatureC": 46,
-    "temperatureF": 114,
-    "summary": "hot"
-  }
-]
+{
+  "date": "0001-01-01T00:00:00",
+  "temperatureC": 46,
+  "temperatureF": 114,
+  "summary": "hot",
+  "location": "77379"
+}
 ```
 
 Press the _Stop_ button on the debug toolbar or select _Stop Debugging_ from the _Run_ menu to stop debugging.

@@ -4,15 +4,17 @@ wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.
 sudo dpkg -i packages-microsoft-prod.deb
 rm packages-microsoft-prod.deb
 
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+&& sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null 
+
 apt-get update
 
 # Install .net 6
-apt-get install -y software-properties-common apt-transport-https gnupg2 dotnet-sdk-6.0
+apt-get install -y software-properties-common apt-transport-https gnupg2 dotnet-sdk-6.0 gh
 
-# export DOTNET_ROOT=$HOME/dotnet
-# export PATH=$PATH:$HOME/dotnet
-
-# wget -q https://aka.ms/install-dotnet-preview -O - | /bin/bash -s - --install-dir $DOTNET_ROOT
+# Install radius CLI
+wget -q https://get.radapp.dev/tools/rad/install.sh -O - | /bin/bash
 
 # Install Dapr CLI
 wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash
